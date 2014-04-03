@@ -1,4 +1,4 @@
-package ru._12kb.tetris.Tetris;
+package ru._12kb.tetris.TetrisGame;
 
 import java.awt.*;
 import java.awt.event.*;
@@ -74,6 +74,9 @@ public class Tetris extends Frame {
     
     // Для двойной буферизации изображения
     Image buffer;
+    
+    //ст
+    
     
     // Инициализируем окошко
     public Tetris(){

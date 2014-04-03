@@ -5,7 +5,7 @@
  */
 
 package Tests;
-import ru._12kb.tetris.Tetris.Tetris;
+import ru._12kb.tetris.TetrisGame.Tetris;
 
 public class LinesDeletion {
     
