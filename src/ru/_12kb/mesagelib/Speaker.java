@@ -38,7 +38,6 @@ public class Speaker {
         }
     }
     
-    
     /**
      * Регистрация подписчика.
      * @param ear - подписчик.
@@ -57,7 +56,10 @@ public class Speaker {
             return false;
         }
         
-        // TODO: проверка на повторную регистрацию
+        if (words.get(word).indexOf(ear) != -1){
+            System.err.println("Ошибка. Speaker.regListener(): слушатель уже зарегистрирован на команду: "+word+".");
+            return false;
+        }
         
         words.get(word).add(ear);
         return true;
@@ -81,12 +83,15 @@ public class Speaker {
             return false;
         }
         
-        int index = words.get(word).indexOf();
-        if (index = ){
-            System.err.println("Ошибка. Speaker.regListener(): команда не зарегистрирована в рассылке.");
+        ArrayList<Listener> cmdListeners = words.get(word);
+        int index = cmdListeners.indexOf(ear);
+        if (index == -1){
+            System.err.println("Ошибка. Speaker.rmListener(): слушатель не зарегистрирован на команду: "+word+".");
             return false;
         }
         
+        cmdListeners.remove(index);
+        return true;
     }
     
     
@@ -95,5 +100,27 @@ public class Speaker {
      * @param word: Все подписчики команды word уведомляются.
      * ALL уведомляет вообще всех
      */
-    public abstract void say(String word);
+    public boolean say(String word) throws NoSuchCommandException{     
+        if (word == null){
+            System.err.println("Ошибка. Speaker.say(): пустая ссылка передана в качестве аргумента.");
+            return false;
+        }
+        
+        ArrayList<Listener> cmdListeners = words.get(word);
+        if (cmdListeners == null){
+            System.err.println("Ошибка. Speaker.say(): команда: "+word+" не зарегистрирована.");
+            return false;
+        }
+        
+        if (cmdListeners.size() == 0){
+            System.err.println("Ошибка. Speaker.say(): нет слушателей на эту команду.");
+            return false;
+        }
+        
+        for (Listener lr : cmdListeners){
+            lr.react(word);
+        }
+        
+        return true;
+    }
 }

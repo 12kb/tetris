@@ -11,5 +11,5 @@ package ru._12kb.mesagelib;
  * @author sirotinin
  */
 public interface Listener {
-    public abstract void react(String word);
+    public abstract void react(String word) throws NoSuchCommandException;
 }

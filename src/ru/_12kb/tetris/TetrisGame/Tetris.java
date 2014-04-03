@@ -1,11 +1,10 @@
 package ru._12kb.tetris.TetrisGame;
 
-import java.awt.*;
-import java.awt.event.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
-import java.awt.image.BufferedImage;
+import java.lang.Runnable;
+import ru._12kb.mesagelib.*;
 
 /*
 Стакан представляет собой поле, разбитое на ячейки. Каждая ячейка может быть
@@ -39,23 +38,22 @@ TODO перенести фигуру в отдельный объект
 
 */
 
-public class Tetris extends Frame {
+public class Tetris implements java.lang.Runnable, Listener {
     //а это мой друг - Стакаша
     //каждая ячейка = закрашенный квадратец
-    static ArrayList<Integer[]> body;
-    
-    // экземпляр окошка. Для ссылания из статических методов.
-    static Tetris frame;
-
+    protected ArrayList<Integer[]> body;
+  
     // размерные параметры. Можно менять размеры стакана, размеры ячейки в пикселях.
-    public static final byte bodySizeX = 15, bodySizeY = 50; // Стакашкины размеры в ячейках.
-    public static final byte cellSize = 10; //ячейкины размеры. В пикселях.
+    protected final byte bodySizeX = 15, bodySizeY = 50; // Стакашкины размеры в ячейках.
+    protected final byte cellSize = 10; //ячейкины размеры. В пикселях.
     
-
     // собственно фигура, и точка её вращения.
-    static List<Integer[]> fig;  // сцыль на текущую фигурку (подмассив Стакадия)
-    static Integer[] rotationPoint;
-
+    protected List<Integer[]> fig;  // сцыль на текущую фигурку (подмассив Стакадия)
+    protected Integer[] rotationPoint;
+    
+    //командный интерфейс, для общения с графикой и контроллером.
+    protected Speaker comandor;
+    
     /*фигуры. 0й элемент массива - точка вращения. Не добавляется в body. Вспоминаем про неё только при
     вращении. Больше нигде она не используется. Не обязательно закрашена.
 
@@ -72,34 +70,17 @@ public class Tetris extends Frame {
     final static int [][] sBOXr = {{0,1},{0,0},{0,1},{1,0},{-1,1}};
     final static int [][] T = {{0,0},{0,0},{0,1},{1,0},{-1,0}};
     
-    // Для двойной буферизации изображения
-    Image buffer;
     
-    //ст
-    
-    
-    // Инициализируем окошко
     public Tetris(){
-        super ("Black'n'White Tetris");
-        int frameSizePixelsX = cellSize*bodySizeX+31;
-        int frameSizePixelsY = cellSize*bodySizeY+30+30;
-        setSize(frameSizePixelsX, frameSizePixelsY);
-        
-        setVisible(true);
         body = new ArrayList();
-        
-        addWindowListener(new MyWindowAdapter());
-        addKeyListener(new MyKeyAdapter(this));
-        addMouseListener(new MyMouseAdapter(this));
+        String [] cmds = {"up", "down", "left", "right", "drop", "pause", "resume",
+         n}
+        comandor = new Speaker()
     }
         
     // комментарии излишни
-    public static void main(String[] args) throws InterruptedException {
-        Tetris tetris = new Tetris();
-        Tetris.frame = tetris;
-        
+    public void run() {
         // главный цикл
-        tetris.repaint();
              for (;;){
                 // позиция вставки фигуры - по центру
                 Integer [] a = new Integer[2];
@@ -112,13 +93,16 @@ public class Tetris extends Frame {
                 // вставка фигуры и проверка на геймовер
                 insertFig(figure, a);
                 if (!AllesInOrnung()){
-                    System.exit(0);
+                    return;
                 }
                 
                 // катим фигуру вниз
                 for(;;){
-                    tetris.repaint();
-                    Thread.sleep(200);
+                    try {
+                        Thread.sleep(200);
+                    } catch (java.lang.InterruptedException e){
+                        
+                    }
                     if (!tryDown()){
                         break;
                     }
@@ -137,7 +121,7 @@ public class Tetris extends Frame {
     }
     
     // вставка фигуры в стакан, а так же регистрация и прописка...
-    static void insertFig(int [][] newFig, Integer [] coords){
+    protected void insertFig(int [][] newFig, Integer [] coords){
         if (fig != null){
             System.out.println("Ошибка. Нельзя вставить фигуру, т.к. еще не прошла предыдущая.");
         }
@@ -149,38 +133,38 @@ public class Tetris extends Frame {
     }
     
     // удаление фигуры. Более не используется.
-    static void deleteFig(){
+    protected void deleteFig(){
         fig.removeAll(fig);
         fig = null;
     }
             
     
-    static void stepDown(){
+    protected void stepDown(){
         for(int i=0; i<fig.size();i++){
             fig.get(i)[1]+=1;
         }
     }
     
-    static void stepUp(){
+    protected void stepUp(){
         for(int i=0; i<fig.size();i++){
             fig.get(i)[1]-=1;
         }
     }
             
-    static void stepRight(){
+    protected void stepRight(){
         for(int i=0; i<fig.size();i++){
             fig.get(i)[0]+=1;
         }
     }
     
-    static void stepLeft(){
+    protected void stepLeft(){
         for(int i=0; i<fig.size();i++){
             fig.get(i)[0]-=1;
         }
     }
     
 
-    static void rotateRight(){
+    protected void rotateRight(){
         
         Integer [] basePoint = fig.get(0).clone();
         
@@ -207,11 +191,11 @@ public class Tetris extends Frame {
     }
     
 
-    static void rotateLeft(){
+    protected void rotateLeft(){
         rotateRight();rotateRight();rotateRight();
     }
 
-    static boolean tryDown(){
+    protected boolean tryDown(){
         stepDown();
         if (!AllesInOrnung()){
             stepUp();
@@ -220,7 +204,7 @@ public class Tetris extends Frame {
         return true;
     }
     
-    static boolean tryRight(){
+    protected boolean tryRight(){
         stepRight();
         if (!AllesInOrnung()){
             stepLeft();
@@ -229,7 +213,7 @@ public class Tetris extends Frame {
         return true;
     }
     
-    static boolean tryLeft(){
+    protected boolean tryLeft(){
         stepLeft();
         if (!AllesInOrnung()){
             stepRight();
@@ -238,7 +222,7 @@ public class Tetris extends Frame {
         return true;
     }
     
-    static boolean tryRotateRight(){
+    protected boolean tryRotateRight(){
         rotateRight();
         if (!AllesInOrnung()){
             rotateLeft();
@@ -249,7 +233,7 @@ public class Tetris extends Frame {
     
     // проверка - нет ли у нас одинаковых точек в body. Делается после перемещений,
     // читобы отслеживать их корректность.
-    static ArrayList<Integer[]> checkFigureIntersections(){
+    protected  ArrayList<Integer[]> checkFigureIntersections(){
         
         ArrayList<Integer[]> result = new ArrayList<>();
         
@@ -265,7 +249,7 @@ public class Tetris extends Frame {
     }
     
     // проверка заполненных рядов
-    static void checkLines(){
+    protected void checkLines(){
        int [] lines = new int[bodySizeY];
        
        for (int i=0; i<body.size(); i++){
@@ -281,7 +265,7 @@ public class Tetris extends Frame {
     }
     
     // удаление всех точек указанного ряда
-    static void removeLine(int y){
+    protected void removeLine(int y){
         // нельзя использовать если присутствует фигура.
         
         int lineToRemove = y;
@@ -302,7 +286,7 @@ public class Tetris extends Frame {
     }
     
     // проверка - не вылазит ли фигура за пределы стакана
-    static ArrayList<Integer[]> checkFigureOutOfBound(){
+    protected ArrayList<Integer[]> checkFigureOutOfBound(){
         
         ArrayList<Integer[]> result = new ArrayList<>();
         
@@ -319,16 +303,42 @@ public class Tetris extends Frame {
     }
     
     // общая проверка. Сделана для удобства.
-    static boolean AllesInOrnung(){
+    protected boolean AllesInOrnung(){
         return checkFigureIntersections().isEmpty() && checkFigureOutOfBound().isEmpty();
     }
     
     // разрегистрация фигуры. Нужна после падения.
-    static void forgetFigure(){
+    protected void forgetFigure(){
         fig = null;
     }
+  
+    @Override
+    public void react(String word){
+        if (word == null){
+            System.err.println("Ошибка. Tetris.react(): пустая ссылка передана в качестве аргумента");
+        }
     
-    // Все хотели узнать но боялись спросить про отрисовку.
+        switch(word){
+            case "up":
+                this.tryRotateRight();
+                break;
+            case "down":
+                this.tryDown();
+                break;
+            case "left":
+                this.tryLeft();
+            case "right":
+                this.tryRight();
+            case "drop":
+                while (this.tryDown()){};
+            default :
+                
+        }
+        
+    }
+    
+    // Все, что хотели узнать но боялись спросить про отрисовку.
+/*
     @Override
     public void paint (Graphics c){
         
@@ -352,7 +362,7 @@ public class Tetris extends Frame {
         
         c.drawImage(buffer,0,0,null);
     }
-
+*/
     // велосипед. Набор функций для работы с массивами. Класс java.util.Arrays? Не, не слышал.
         static class ArrayOperations {
             static Integer [] toInteger(int[] arr){
@@ -399,66 +409,6 @@ public class Tetris extends Frame {
             
         }
 }
-
-// класс для обработки мышки. Не используется.
-class MyMouseAdapter extends MouseAdapter {
-    Tetris frame;
-    
-    MyMouseAdapter(Tetris _frame){
-        this.frame = _frame;
-    }
-
-}
-
-// класс для обработки кнопочек.
-class MyKeyAdapter extends KeyAdapter {
-    Tetris frame;
-    
-    MyKeyAdapter(Tetris _frame){
-        this.frame = _frame;
-    }
-    
-    @Override
-    public void keyPressed(KeyEvent ke){
-            switch(ke.getKeyCode()){
-                case KeyEvent.VK_RIGHT:
-                    Tetris.tryRight();
-                    frame.repaint();
-                    break;
-                case KeyEvent.VK_LEFT:
-                    Tetris.tryLeft();
-                    frame.repaint();
-                    break;
-                case KeyEvent.VK_UP:
-                    Tetris.tryRotateRight();
-                    frame.repaint();
-                    break;
-                case KeyEvent.VK_DOWN:
-                    Tetris.tryDown();
-                    frame.repaint();
-                    break;
-                case KeyEvent.VK_SPACE:
-                    while(Tetris.tryDown()){;}
-                    frame.repaint();
-                    break;
-                //DEBUG
-                case KeyEvent.VK_1:
-                    Tetris.checkLines();
-                    frame.repaint();
-              }  
-        }
-    }
-
-// класс для отлова событий окна. Нужен только для его закрытия по крестику.
-class MyWindowAdapter extends WindowAdapter {
-    // TODO: проверить закрытие
-    @Override
-    public void windowClosing(WindowEvent we){
-        System.exit(0);
-    }
-}
-
-
 
 // не учтено: 
 // -нет сообщения Дерьмовер. При переполнении стакана тупо выход.
